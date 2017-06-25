@@ -1,5 +1,6 @@
 package com.coolweather.android;
 
+import android.content.Intent;
 import android.content.SharedPreferences;
 import android.graphics.Color;
 import android.os.Build;
@@ -22,6 +23,7 @@ import android.widget.Toast;
 import com.bumptech.glide.Glide;
 import com.coolweather.android.gson.Forecast;
 import com.coolweather.android.gson.Weather;
+import com.coolweather.android.service.AutoUpdateService;
 import com.coolweather.android.util.HttpUtil;
 import com.coolweather.android.util.Utility;
 
@@ -48,6 +50,7 @@ public class WeatherActivity extends AppCompatActivity {
     private ImageView bingPicImg;
     public DrawerLayout drawerLayout;
     private Button navButton;
+    private  String mweatherId;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -64,7 +67,6 @@ public class WeatherActivity extends AppCompatActivity {
         navButton=(Button)findViewById(R.id.nav_button);
         swipeRefresh=(SwipeRefreshLayout)findViewById(R.id.swipe_refresh);
         swipeRefresh.setColorSchemeResources(R.color.colorPrimary);
-        final String weatherId;
         bingPicImg=(ImageView)findViewById(R.id.bing_pic_img);
         weatherLayout=(ScrollView)findViewById( R.id.weather_layout);
         titleCity=(TextView)findViewById(R.id.title_city);
@@ -95,20 +97,20 @@ public class WeatherActivity extends AppCompatActivity {
         if(weatherString!=null)
         {
             Weather weather= Utility.handleWeatherResponse(weatherString);
-            weatherId=weather.basic.weatherId;
+            mweatherId=weather.basic.weatherId;
             showWeatherInfo(weather);
         }
         else
         {
-            weatherId=getIntent().getStringExtra("weather_id");
+            mweatherId=getIntent().getStringExtra("weather_id");
             weatherLayout.setVisibility(View.INVISIBLE);
-            requestWeather(weatherId);
+            requestWeather(mweatherId);
         }
         swipeRefresh.setOnRefreshListener(new SwipeRefreshLayout.OnRefreshListener()
         {
             @Override
             public void onRefresh() {
-                requestWeather(weatherId);
+                requestWeather(mweatherId);
             }
         });
 
@@ -140,6 +142,7 @@ public class WeatherActivity extends AppCompatActivity {
     }
     public void requestWeather(final String weatherId)
     {
+        mweatherId=weatherId;
         String weatherUrl="http://guolin.tech/api/weather?cityid="+weatherId
                 +"&key=d9988604366248019fb7d84f20193455";
         HttpUtil.sendOkHttpRequest(weatherUrl, new Callback() {
@@ -216,7 +219,7 @@ public class WeatherActivity extends AppCompatActivity {
         carWashText.setText(carWash);
         sportText.setText(sport);
         weatherLayout.setVisibility(View.VISIBLE);
-        //Intent intent = new Intent(this, AutoUpdateService.class);
-        //startService(intent);
+        Intent intent = new Intent(this, AutoUpdateService.class);
+        startService(intent);
     }
 }
